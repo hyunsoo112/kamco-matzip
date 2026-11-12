@@ -8,12 +8,21 @@
 //                  손댄 칸 아래에 이유를 빨간 글씨로 보여 줍니다.
 // 서버 쪽 2차 검사: /api/restaurants/[id]/reviews 에서 같은 규칙으로 다시 검사합니다.
 // 등록에 실패하면 입력한 내용은 지우지 않습니다. ("다시 시도" 버튼은 PLAN 작업 23에서 붙임)
+//
+// PLAN 작업 18 (PRD 개발 단위 15): 같은 휴대폰에서는 한 식당에 하루 1번만 평가할 수 있습니다.
+//   - 화면을 열 때 상세 API에 기기 표시값을 보내 "오늘 이미 평가했는지"를 물어보고,
+//     이미 했으면 쓰기 칸 대신 "오늘은 이미 평가했어요. 내일 다시 남길 수 있어요"를 보여 줍니다.
+//   - 평가를 남긴 직후, 또는 서버가 409(오늘 이미 평가함)로 막았을 때도 같은 안내로 바꿉니다.
+//   - 실제로 막는 것은 서버와 저장 공간 규칙(같은 식당 + 같은 기기 + 같은 날은 한 번만)입니다.
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { getDeviceId } from "@/lib/deviceId";
 import { countChars, LIMITS, validateReview } from "@/lib/rules";
-import type { ApiErrorResponse } from "@/lib/types";
+import type { ApiErrorResponse, RestaurantDetailResponse } from "@/lib/types";
+
+/** 하루 1번 규칙 안내 (DESIGN 3.2) */
+const ALREADY_REVIEWED_MESSAGE = "오늘은 이미 평가했어요. 내일 다시 남길 수 있어요";
 
 type Field = "nickname" | "rating" | "comment";
 
@@ -30,6 +39,26 @@ export default function ReviewForm({ restaurantId }: { restaurantId: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [doneMessage, setDoneMessage] = useState<string | null>(null);
+  // 오늘 이 휴대폰으로 이 식당에 평가했는지 (null = 아직 확인 중)
+  const [reviewedToday, setReviewedToday] = useState<boolean | null>(null);
+
+  // 화면을 열 때 한 번: 오늘 이미 평가했는지 서버에 물어봄
+  useEffect(() => {
+    let cancelled = false;
+    const url = `/api/restaurants/${encodeURIComponent(restaurantId)}?deviceId=${encodeURIComponent(getDeviceId())}`;
+    fetch(url, { cache: "no-store" })
+      .then((res) => (res.ok ? (res.json() as Promise<RestaurantDetailResponse>) : null))
+      .then((body) => {
+        if (!cancelled) setReviewedToday(body?.data.reviewedToday ?? false);
+      })
+      .catch(() => {
+        // 확인하지 못해도 쓰기 칸은 보여 줌 (서버가 등록할 때 다시 막음)
+        if (!cancelled) setReviewedToday(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [restaurantId]);
 
   // 지금 입력이 규칙에 맞는지 (맞으면 null)
   const problem = validateReview({ nickname, rating: rating || undefined, comment });
@@ -71,12 +100,18 @@ export default function ReviewForm({ restaurantId }: { restaurantId: string }) {
         setComment("");
         setTouched({ nickname: false, rating: false, comment: false });
         setDoneMessage("평가를 남겼어요. 고마워요!");
+        setReviewedToday(true); // 오늘은 더 남길 수 없으므로 안내로 바꿈
         router.refresh();
         return;
       }
 
-      // 서버가 막은 이유를 보여 주고, 입력한 내용은 그대로 둠
       const body = (await response.json().catch(() => null)) as ApiErrorResponse | null;
+      if (body?.error.code === "ALREADY_REVIEWED_TODAY") {
+        // 다른 창에서 이미 남긴 경우 등: 쓰기 칸을 안내로 바꿈
+        setReviewedToday(true);
+        return;
+      }
+      // 서버가 막은 이유를 보여 주고, 입력한 내용은 그대로 둠
       setServerMessage(body?.error.message ?? "잠시 후 다시 시도해 주세요");
     } catch {
       // 인터넷 끊김 등으로 서버 응답이 없을 때 (DESIGN 6.2 "응답 없음")
@@ -87,6 +122,26 @@ export default function ReviewForm({ restaurantId }: { restaurantId: string }) {
   }
 
   const commentLength = countChars(comment);
+
+  // 오늘 이미 평가한 식당: 쓰기 칸 대신 안내 (DESIGN 3.2)
+  if (reviewedToday === true) {
+    return (
+      <section
+        className="mt-6 rounded-xl border border-black/10 p-4 dark:border-white/15"
+        aria-labelledby="review-form-title"
+      >
+        <h2 id="review-form-title" className="text-lg font-semibold">
+          평가 남기기
+        </h2>
+        {doneMessage && (
+          <p role="status" className="mt-2 text-sm font-medium text-green-700 dark:text-green-400">
+            {doneMessage}
+          </p>
+        )}
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">{ALREADY_REVIEWED_MESSAGE}</p>
+      </section>
+    );
+  }
 
   return (
     <form
@@ -171,15 +226,10 @@ export default function ReviewForm({ restaurantId }: { restaurantId: string }) {
           {serverMessage}
         </p>
       )}
-      {doneMessage && (
-        <p role="status" className="mt-3 text-sm text-green-700 dark:text-green-400">
-          {doneMessage}
-        </p>
-      )}
 
       <button
         type="submit"
-        disabled={problem !== null || submitting}
+        disabled={problem !== null || submitting || reviewedToday === null}
         className="mt-4 w-full rounded-full bg-orange-500 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-400"
       >
         {submitting ? "등록하는 중…" : "등록"}

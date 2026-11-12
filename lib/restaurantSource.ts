@@ -20,6 +20,7 @@ import {
   filterRestaurants,
   searchRestaurants,
   sortByWalkThenName,
+  todayInKorea,
   type RestaurantFilters,
 } from "./rules";
 import type { RatingSummary, Restaurant, RestaurantListItem, Review } from "./types";
@@ -78,6 +79,21 @@ export async function getRestaurantList(
     priceRange,
     ...(summaries.get(id) ?? NO_REVIEWS),
   }));
+}
+
+/**
+ * 오늘(한국 시간) 이 기기로 이 식당에 평가를 남겼는지 — 하루 1번 규칙 (PLAN 작업 18)
+ * 기기 표시값은 비교에만 쓰고 어디에도 돌려주지 않습니다.
+ */
+export async function hasReviewedToday(restaurantId: string, deviceId: string): Promise<boolean> {
+  const { count, error } = await getDb()
+    .from("reviews")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId)
+    .eq("device_id", deviceId)
+    .eq("review_date", todayInKorea());
+  if (error) throw new DataLoadError(`오늘 평가 여부를 확인하지 못했습니다: ${error.message}`);
+  return (count ?? 0) > 0;
 }
 
 /** 상세 화면용: 식당 정보 + 평가 목록(최신순) + 평균 별점. 없는 식당이면 null */
