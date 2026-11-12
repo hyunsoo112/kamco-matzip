@@ -23,12 +23,11 @@ function partySizeText(partySizes: readonly PartySize[]): string {
 }
 
 /** 날짜 글자, 한국 시간 기준 (예: "11/10") */
-function shortDate(iso: string): string {
-  // "sv-SE" 형식은 "2026-11-10"처럼 나와서 월·일을 꺼내기 쉽습니다.
-  const [, month, day] = new Date(iso)
+function writtenDate(iso: string): string {
+  // "sv-SE" 형식은 "2026-11-10"처럼 나옵니다. 한국 시간 기준으로 "2026.11.10"으로 보여 줍니다.
+  return new Date(iso)
     .toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })
-    .split("-");
-  return `${Number(month)}/${Number(day)}`;
+    .replaceAll("-", ".");
 }
 
 /** 식당 정보 한 줄 (이름표 + 내용) */
@@ -121,14 +120,19 @@ async function RestaurantDetail({
               >
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-semibold">{review.nickname}</span>
-                  <span className="text-zinc-500 dark:text-zinc-400">
-                    <span aria-label={`별점 ${review.rating}점`}>
-                      {"⭐".repeat(review.rating)}
-                    </span>{" "}
-                    {shortDate(review.createdAt)}
+                  <span
+                    className="text-zinc-500 dark:text-zinc-400"
+                    aria-label={`별점 ${review.rating}점`}
+                  >
+                    {"⭐".repeat(review.rating)}
                   </span>
                 </div>
                 <p className="mt-1 text-sm">{review.comment}</p>
+                {/* 한줄평을 쓴 날짜 (한국 시간 기준) */}
+                <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                  작성일{" "}
+                  <time dateTime={review.createdAt}>{writtenDate(review.createdAt)}</time>
+                </p>
               </li>
             ))}
           </ul>
