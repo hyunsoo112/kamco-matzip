@@ -86,6 +86,22 @@ export function containsBannedWord(text: string): boolean {
 }
 
 // ─────────────────────────────────────────────
+// 2-1. 정렬 (PRD must ① 세 번째 규칙, DESIGN 4.1)
+// ─────────────────────────────────────────────
+
+/**
+ * 목록 정렬: 걸어서 걸리는 시간이 짧은 순(5분 → 10분 → 15분), 같으면 이름 가나다순.
+ * 원래 목록은 그대로 두고, 정렬한 새 목록을 돌려줍니다.
+ */
+export function sortByWalkThenName<
+  T extends { walkMinutes: number; name: string },
+>(restaurants: readonly T[]): T[] {
+  return [...restaurants].sort(
+    (a, b) => a.walkMinutes - b.walkMinutes || a.name.localeCompare(b.name, "ko"),
+  );
+}
+
+// ─────────────────────────────────────────────
 // 3. 평균 별점과 날짜
 // ─────────────────────────────────────────────
 

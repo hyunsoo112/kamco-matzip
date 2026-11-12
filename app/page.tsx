@@ -1,15 +1,18 @@
 // 첫 화면 (목록 화면)
 // PLAN 작업 6 (PRD 개발 단위 3): 미리 넣은 식당을 카드 목록으로 보여 줍니다.
+// PLAN 작업 7 (PRD 개발 단위 4): 걸어서 걸리는 시간이 짧은 순, 같으면 이름 가나다순으로 정렬합니다.
 // - 지금은 data/seed-restaurants.ts를 직접 읽습니다. 저장 공간 연결 후(PLAN 작업 14) 바꿉니다.
-// - 정렬(작업 7), 조건(작업 8), 검색(작업 9), 더 보기(작업 10), 0곳 안내(작업 11)는 이어서 붙입니다.
+// - 조건(작업 8), 검색(작업 9), 더 보기(작업 10), 0곳 안내(작업 11)는 이어서 붙입니다.
 
 import RestaurantCard from "@/components/RestaurantCard";
 import { SEED_RESTAURANTS } from "@/data/seed-restaurants";
+import { sortByWalkThenName } from "@/lib/rules";
 import type { RestaurantListItem } from "@/lib/types";
 
-/** 목록 카드에 필요한 값만 골라 냅니다. 아직 평가가 없으므로 평가 수 0, 평균 별점 없음 */
+/** 목록 카드에 필요한 값만 골라 정렬합니다. 아직 평가가 없으므로 평가 수 0, 평균 별점 없음 */
 function toListItems(): RestaurantListItem[] {
-  return SEED_RESTAURANTS.map(({ id, name, cuisine, walkMinutes, priceRange }) => ({
+  const sorted = sortByWalkThenName(SEED_RESTAURANTS);
+  return sorted.map(({ id, name, cuisine, walkMinutes, priceRange }) => ({
     id,
     name,
     cuisine,
