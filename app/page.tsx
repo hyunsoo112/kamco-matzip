@@ -5,7 +5,7 @@
 // PLAN 작업 9 (PRD 개발 단위 6): 검색창으로 이름·대표 메뉴·주소에서 찾습니다. (검색어 1~20글자)
 // PLAN 작업 10 (PRD 개발 단위 7): 20곳씩 보여 주고 "더 보기"로 20곳씩 더 보여 줍니다.
 // - 식당은 lib/restaurantSource.ts에서 가져옵니다. 저장 공간 연결 후(PLAN 작업 14) 그 파일만 바꿉니다.
-// - 0곳 안내(작업 11)는 이어서 붙입니다.
+// PLAN 작업 11 (PRD 개발 단위 8): 결과가 0곳이면 안내 문구를 보여 줍니다. (components/RestaurantResults.tsx)
 
 import { Suspense } from "react";
 import FilterBar from "@/components/FilterBar";

@@ -16,12 +16,27 @@ import RestaurantCard from "@/components/RestaurantCard";
 import { LIMITS } from "@/lib/rules";
 import type { RestaurantListItem } from "@/lib/types";
 
+/** 결과 0곳 안내 (PRD 문구 그대로) */
+const NO_RESULT_MESSAGE = "조건에 맞는 식당이 없어요. 조건을 줄여 보세요";
+
 export default function RestaurantResults({
   restaurants,
 }: {
   restaurants: RestaurantListItem[];
 }) {
   const [visibleCount, setVisibleCount] = useState<number>(LIMITS.pageSize);
+
+  // PLAN 작업 11 (PRD 개발 단위 8): 결과가 0곳이면 빈 화면 대신 안내 문구 (PRD must ① 네 번째 규칙)
+  if (restaurants.length === 0) {
+    return (
+      <p
+        role="status"
+        className="rounded-xl border border-dashed border-black/20 px-4 py-8 text-center text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-300"
+      >
+        {NO_RESULT_MESSAGE}
+      </p>
+    );
+  }
 
   const visible = restaurants.slice(0, visibleCount);
   const remaining = restaurants.length - visible.length;
