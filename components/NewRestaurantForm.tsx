@@ -8,8 +8,10 @@
 //   - 필수 항목이 하나라도 비어 있으면 등록 버튼이 눌리지 않습니다.
 //   - 글자 칸은 최대 길이(이름 30·위치 50·대표 메뉴 30)를 넘게 입력할 수 없습니다.
 // 서버 쪽 2차 검사: POST /api/restaurants 에서 같은 규칙으로 다시 검사합니다.
-// 등록에 실패하면 입력한 내용은 지우지 않습니다. ("다시 시도" 버튼은 PLAN 작업 23에서 붙임)
-// 같은 이름 안내·하루 3곳 제한 화면은 PLAN 작업 21에서 다듬습니다.
+// PLAN 작업 23 (PRD 개발 단위 20): 등록에 실패해도 입력한 내용은 지우지 않습니다.
+//   - 인터넷 끊김·서버 오류처럼 "다시 보내면 될 수 있는" 실패에는 "다시 시도" 버튼을 보여 줍니다.
+//   - 같은 이름·하루 3곳 초과·글자 수처럼 "내용을 고치거나 내일 해야 하는" 실패에는 보여 주지 않습니다.
+// 같은 이름 안내·하루 3곳 제한은 PLAN 작업 21에서 확인했습니다.
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -101,6 +103,8 @@ export default function NewRestaurantForm() {
   const [serverProblem, setServerProblem] = useState<{ message: string; field?: string } | null>(
     null,
   );
+  // 서버가 알려 준 실패가 "다시 보내면 될 수 있는" 종류인지 (true면 "다시 시도" 버튼을 보여 줌)
+  const [canRetry, setCanRetry] = useState(false);
 
   // 지금 입력이 규칙에 맞는지 (맞으면 null). 비어 있는 선택 칸은 값 없음(undefined)으로 넘김
   const problem = validateNewRestaurant({
@@ -117,6 +121,7 @@ export default function NewRestaurantForm() {
   function touch(field: Field) {
     setTouched((t) => ({ ...t, [field]: true }));
     setServerProblem(null);
+    setCanRetry(false);
   }
 
   /** 이 칸 아래에 빨간 안내를 보여 줄지: 문제가 이 칸이고, 사용자가 이 칸을 손댔을 때 */
@@ -132,12 +137,13 @@ export default function NewRestaurantForm() {
     return choices.filter((c) => next.includes(c));
   }
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
+  /** 입력한 내용을 서버로 보냄 (등록 버튼과 "다시 시도" 버튼이 같이 씀) */
+  async function submit() {
     if (problem || submitting) return;
 
     setSubmitting(true);
     setServerProblem(null);
+    setCanRetry(false);
     try {
       const response = await fetch("/api/restaurants", {
         method: "POST",
@@ -168,12 +174,20 @@ export default function NewRestaurantForm() {
         message: body?.error.message ?? "잠시 후 다시 시도해 주세요",
         field: body?.error.field,
       });
+      // 서버 쪽 문제(5xx)는 잠시 뒤 다시 보내면 될 수 있음. 내용·한도 문제(4xx)는 버튼 없음
+      setCanRetry(response.status >= 500);
     } catch {
       // 인터넷 끊김 등으로 서버 응답이 없을 때 (DESIGN 6.2 "응답 없음")
       setServerProblem({ message: "인터넷 연결을 확인하고 다시 시도해 주세요" });
+      setCanRetry(true);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    void submit();
   }
 
   const textInputClass =
@@ -368,9 +382,22 @@ export default function NewRestaurantForm() {
 
       {/* 서버가 알려 준 문제 중 특정 칸이 아닌 것 (입력 내용은 그대로 남아 있음) */}
       {serverProblem && !serverProblem.field && (
-        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
-          {serverProblem.message}
-        </p>
+        <div className="mt-4">
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {serverProblem.message}
+          </p>
+          {/* 인터넷 끊김·서버 오류일 때만: 입력한 내용 그대로 다시 보냄 (PLAN 작업 23) */}
+          {canRetry && (
+            <button
+              type="button"
+              onClick={() => void submit()}
+              disabled={submitting}
+              className="mt-2 rounded-full border border-orange-500 px-4 py-2 text-sm font-semibold text-orange-600 disabled:opacity-50 dark:text-orange-400"
+            >
+              다시 시도
+            </button>
+          )}
+        </div>
       )}
 
       <button
