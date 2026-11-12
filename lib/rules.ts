@@ -203,8 +203,15 @@ function checkLength(
 ): RuleViolation | null {
   const length = typeof value === "string" ? countChars(value) : 0;
   if (length < limit.min || length > limit.max) {
-    const range =
-      limit.min === 1 ? `${limit.max}글자 이하` : `${limit.min}~${limit.max}글자`;
+    // 비어 있으면 "꼭 적어 주세요", 너무 길거나 짧으면 글자 수 범위로 안내 (1글자 이상인 칸은 "1~N글자")
+    const range = `${limit.min}~${limit.max}글자`;
+    if (length === 0) {
+      return {
+        code: "VALIDATION_ERROR",
+        message: `${withTopicParticle(label)} 꼭 적어 주세요 (${range})`,
+        field,
+      };
+    }
     return {
       code: "VALIDATION_ERROR",
       message: `${withTopicParticle(label)} ${range}로 적어 주세요`,

@@ -6,7 +6,9 @@
 // PLAN 작업 10 (PRD 개발 단위 7): 20곳씩 보여 주고 "더 보기"로 20곳씩 더 보여 줍니다.
 // PLAN 작업 11 (PRD 개발 단위 8): 결과가 0곳이면 안내 문구를 보여 줍니다. (components/RestaurantResults.tsx)
 // PLAN 작업 14 (PRD 개발 단위 11): 식당과 평균 별점을 저장 공간(Supabase)에서 읽어 옵니다. (lib/restaurantSource.ts)
+// PLAN 작업 20 (PRD 개발 단위 17): 화면 아래에 "+ 새 식당 등록" 버튼을 고정해 둡니다.
 
+import Link from "next/link";
 import { Suspense } from "react";
 import FilterBar from "@/components/FilterBar";
 import RestaurantResults from "@/components/RestaurantResults";
@@ -72,13 +74,24 @@ export default function Home({ searchParams }: PageProps<"/">) {
         <h1 className="text-2xl font-bold">캠코인재개발원 맛집 지도</h1>
       </header>
 
-      <main className="flex-1 px-4 pb-8">
+      {/* 아래 고정 버튼에 목록이 가려지지 않도록 아래쪽을 넉넉히 비워 둠 */}
+      <main className="flex-1 px-4 pb-28">
         <Suspense
           fallback={<p className="text-sm text-zinc-500">식당 목록을 불러오는 중…</p>}
         >
           <RestaurantList searchParams={searchParams} />
         </Suspense>
       </main>
+
+      {/* PLAN 작업 20: 화면 아래에 고정된 "새 식당 등록" 버튼 (DESIGN 3.1) */}
+      <div className="pointer-events-none sticky bottom-0 flex justify-center bg-gradient-to-t from-white via-white/90 to-transparent px-4 pt-6 pb-4 dark:from-black dark:via-black/90">
+        <Link
+          href="/restaurants/new"
+          className="pointer-events-auto rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-lg"
+        >
+          + 새 식당 등록
+        </Link>
+      </div>
     </div>
   );
 }
