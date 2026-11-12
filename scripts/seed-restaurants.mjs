@@ -1,8 +1,8 @@
-// 미리 넣을 식당 50곳(data/seed-restaurants.ts)을 저장 공간(Supabase)에 옮겨 넣는 명령
+// 미리 넣을 식당 100곳(data/seed-restaurants.ts)을 저장 공간(Supabase)에 옮겨 넣는 명령
 // PLAN 작업 14 (PRD 개발 단위 11) / 기준: DESIGN.md 5.3 미리 넣을 데이터와 시험용 데이터
 //
 // 쓰는 법 (my-app 폴더에서):
-//   npm run db:seed              미리 넣을 50곳을 넣거나, 이미 있으면 내용을 최신으로 고칩니다.
+//   npm run db:seed              미리 넣을 100곳을 넣거나, 이미 있으면 내용을 최신으로 고칩니다.
 //   npm run db:seed -- --with-test     시험용 25곳("[시험]")도 함께 넣습니다. ("더 보기" 시험용)
 //   npm run db:seed -- --remove-test   시험용 25곳("[시험]"으로 시작하는 식당)을 지웁니다.
 //

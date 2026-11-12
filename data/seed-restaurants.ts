@@ -1,4 +1,4 @@
-// 처음 화면에 미리 넣어 둘 식당 50곳 (손으로 쓴 10곳 + 규칙대로 만든 40곳)
+// 처음 화면에 미리 넣어 둘 식당 100곳 (손으로 쓴 10곳 + 규칙대로 만든 90곳)
 // PLAN 작업 5 (PRD 개발 단위 2) / 기준: DESIGN.md 5.3 "미리 넣을 데이터"
 //
 // 상태: 임시 데이터 — 작성자가 실제로 다녀온 식당 정보를 주면 이 파일만 바꿉니다.
@@ -6,7 +6,7 @@
 //   - 주소도 실제로 없는 가짜 주소입니다.
 //
 // 지켜야 할 조건 (실제 데이터로 바꿀 때도 동일):
-//   - 50곳, "기타"를 뺀 음식 종류가 5가지 이상
+//   - 100곳, "기타"를 뺀 음식 종류가 5가지 이상
 //   - 모든 칸이 lib/rules.ts의 새 식당 규칙(validateNewRestaurant)을 통과해야 함
 //
 // 저장 공간(Supabase)을 연결하기 전(PLAN 작업 6~12)에는 화면이 이 파일을 직접 읽고,
@@ -166,4 +166,45 @@ const EXTRA_SEED_RESTAURANTS: Restaurant[] = EXTRA_BY_CUISINE.flatMap(({ cuisine
   }),
 );
 
-export const SEED_RESTAURANTS: Restaurant[] = [...BASE_SEED_RESTAURANTS, ...EXTRA_SEED_RESTAURANTS];
+// ─────────────────────────────────────────────
+// seed-51 ~ seed-100: 임시 식당 50곳 추가 (음식 종류별 10곳)
+// 이름·주소·메뉴는 모두 가짜입니다. 값은 위와 같은 방식으로 돌려가며 정했습니다.
+// ─────────────────────────────────────────────
+
+const MORE_BY_CUISINE: { cuisine: Restaurant["cuisine"]; items: [string, string][] }[] = [
+  { cuisine: "한식", items: [["감자탕 본점", "뼈해장국"], ["보쌈 정식집", "보쌈 정식"], ["닭갈비 철판", "닭갈비"], ["냉면 한그릇", "물냉면"], ["곰탕 하루", "한우곰탕"], ["갈비탕 마을", "갈비탕"], ["쌈밥 정원", "쌈밥 정식"], ["제주 고기국수", "고기국수"], ["부대찌개 광장", "부대찌개"], ["콩나물 국밥집", "콩나물국밥"]] },
+  { cuisine: "중식", items: [["홍콩 반점", "볶음짬뽕"], ["양꼬치 거리", "양꼬치"], ["딤섬 하우스", "새우 딤섬"], ["유산슬 주방", "유산슬덮밥"], ["만리장성 식당", "고추잡채"], ["쿵푸 마라샹궈", "마라샹궈"], ["짜장 공방", "쟁반짜장"], ["동북 훠궈", "훠궈 세트"], ["베이징 덕집", "북경오리"], ["차돌 짬뽕", "차돌짬뽕"]] },
+  { cuisine: "일식", items: [["돈부리 상점", "연어덮밥"], ["이치방 카레", "돈가스 카레"], ["텐동 공방", "새우 텐동"], ["야키토리 골목", "닭꼬치 모둠"], ["사누키 우동", "가마아게 우동"], ["회전 초밥", "광어초밥"], ["타코야키 포차", "타코야키"], ["오코노미 식당", "오코노미야키"], ["장어 덮밥집", "장어덮밥"], ["일본 가정식", "함박 정식"]] },
+  { cuisine: "양식", items: [["타코 키친", "소고기 타코"], ["리코타 샐러드", "리코타 샐러드"], ["립 바비큐", "바비큐 립"], ["라자냐 하우스", "미트 라자냐"], ["수프 앤 브레드", "크림수프 세트"], ["핫플레이트 그릴", "함박스테이크"], ["파니니 카페", "햄치즈 파니니"], ["화덕 피자집", "마르게리타"], ["씨푸드 파스타", "봉골레"], ["토스카나 식당", "닭다리 구이"]] },
+  { cuisine: "분식", items: [["치즈 김밥집", "치즈김밥"], ["즉석 떡볶이", "즉석 떡볶이"], ["돈가스 분식", "미니 돈가스"], ["김말이 가게", "김말이 튀김"], ["오뎅 정류장", "꼬치 어묵"], ["참치 주먹밥", "참치 주먹밥"], ["라면 맛집", "치즈라면"], ["비빔국수 가게", "비빔국수"], ["만두 분식", "손만두"], ["계란빵 아침", "계란빵"]] },
+];
+
+const MORE_DISTANCE: Restaurant["distanceKm"][] = [5, 1, 10, 1, 5, 10, 1, 5, 1, 10];
+const MORE_PRICE: Restaurant["priceRange"][] = ["1만~2만 원 미만", "1만 원 미만", "2만 원 이상", "1만 원 미만", "1만~2만 원 미만"];
+const MORE_PARTY: Restaurant["partySizes"][] = [["2~4명"], ["혼밥"], ["혼밥", "2~4명", "단체"], ["2~4명", "단체"], ["혼밥", "2~4명"]];
+const MORE_DAYS_OFF: Restaurant["daysOff"][] = [[], ["화"], [], ["일"], ["금"], [], ["월", "화"], [], ["토"], []];
+const MORE_TOWNS = ["나다동", "라마동", "바사동", "아자동", "가나동"];
+
+const MORE_SEED_RESTAURANTS: Restaurant[] = MORE_BY_CUISINE.flatMap(({ cuisine, items }, c) =>
+  items.map(([name, menu], i) => {
+    const n = c * 10 + i; // 0 ~ 49
+    return {
+      id: `seed-${String(n + 51).padStart(2, "0")}`,
+      name: `[임시] ${name}`,
+      address: `임시로 ${n + 52} (${MORE_TOWNS[(n + c) % MORE_TOWNS.length]})`,
+      distanceKm: MORE_DISTANCE[(n + 2 * c) % MORE_DISTANCE.length],
+      cuisine,
+      signatureMenu: menu,
+      partySizes: MORE_PARTY[(n + c) % MORE_PARTY.length],
+      priceRange: MORE_PRICE[(n + i) % MORE_PRICE.length],
+      daysOff: MORE_DAYS_OFF[(n + 3) % MORE_DAYS_OFF.length],
+    };
+  }),
+);
+
+// 화면과 저장 공간 옮기기가 읽는 전체 목록 (손으로 쓴 10곳 + 40곳 + 50곳)
+export const SEED_RESTAURANTS: Restaurant[] = [
+  ...BASE_SEED_RESTAURANTS,
+  ...EXTRA_SEED_RESTAURANTS,
+  ...MORE_SEED_RESTAURANTS,
+];
