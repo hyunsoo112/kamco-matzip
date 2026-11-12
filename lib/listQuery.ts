@@ -63,13 +63,28 @@ export function filterParamEntries(
     .map((kind) => ({ name: PARAM_NAMES[kind], value: filters[kind].join(",") }));
 }
 
-/** 목록 화면 상태 → 주소 (예: "/?cuisine=한식&q=찌개"). 아무것도 없으면 "/" */
-export function listStateToHref(state: ListState): string {
+/** 목록 화면 상태 → 주소 뒤에 붙일 글자 (예: "cuisine=한식&q=찌개"). 아무것도 없으면 "" */
+export function listStateToQueryString(state: ListState): string {
   const query = new URLSearchParams();
   for (const { name, value } of filterParamEntries(state)) query.set(name, value);
   if (state.q.trim() !== "") query.set(SEARCH_PARAM, state.q.trim());
-  const text = query.toString();
+  return query.toString();
+}
+
+/** 목록 화면 상태 → 주소 (예: "/?cuisine=한식&q=찌개"). 아무것도 없으면 "/" */
+export function listStateToHref(state: ListState): string {
+  const text = listStateToQueryString(state);
   return text ? `/?${text}` : "/";
+}
+
+/**
+ * 상세 화면 주소 (PLAN 작업 12). 목록의 조건·검색어를 그대로 붙여 두어,
+ * 상세 화면의 "목록으로"가 같은 조건의 목록으로 돌아가게 합니다.
+ * 예) "/restaurants/seed-01?cuisine=한식"
+ */
+export function restaurantDetailHref(id: string, listQueryString: string): string {
+  const path = `/restaurants/${encodeURIComponent(id)}`;
+  return listQueryString ? `${path}?${listQueryString}` : path;
 }
 
 /** 조건 버튼 하나를 눌렀을 때 갈 주소: 이미 골랐으면 빼고, 안 골랐으면 더합니다. (검색어는 유지) */

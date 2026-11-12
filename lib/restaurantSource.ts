@@ -14,6 +14,11 @@ function includeTestRestaurants(): boolean {
   return process.env.INCLUDE_TEST_RESTAURANTS === "1";
 }
 
+/** 식당 번호로 한 곳 찾기 (없으면 null) — 상세 화면(PLAN 작업 12)에서 사용 */
+export function getRestaurantById(id: string): Restaurant | null {
+  return getAllRestaurants().find((r) => r.id === id) ?? null;
+}
+
 /** 지금 보여 줄 수 있는 모든 식당 */
 export function getAllRestaurants(): Restaurant[] {
   return includeTestRestaurants()

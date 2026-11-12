@@ -11,7 +11,11 @@ import { Suspense } from "react";
 import FilterBar from "@/components/FilterBar";
 import RestaurantResults from "@/components/RestaurantResults";
 import SearchBox from "@/components/SearchBox";
-import { listStateToHref, parseListState, type RawSearchParams } from "@/lib/listQuery";
+import {
+  listStateToQueryString,
+  parseListState,
+  type RawSearchParams,
+} from "@/lib/listQuery";
 import { getAllRestaurants } from "@/lib/restaurantSource";
 import {
   filterRestaurants,
@@ -55,6 +59,8 @@ async function RestaurantList({
   const query = hasQuery && !searchProblem ? state.q : "";
 
   const restaurants = toListItems(state, query);
+  // 지금 목록의 조건·검색어 (카드 → 상세 → "목록으로"에서 그대로 돌아오기 위해 사용)
+  const listQueryString = listStateToQueryString({ ...state, q: query });
 
   return (
     <>
@@ -74,8 +80,9 @@ async function RestaurantList({
       </p>
       {/* 조건·검색어가 바뀌면 key가 바뀌어 "더 보기"로 늘린 개수가 처음(20곳)으로 돌아갑니다 */}
       <RestaurantResults
-        key={listStateToHref({ ...state, q: query })}
+        key={listQueryString}
         restaurants={restaurants}
+        listQueryString={listQueryString}
       />
     </>
   );

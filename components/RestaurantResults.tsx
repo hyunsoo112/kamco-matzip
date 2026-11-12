@@ -13,16 +13,20 @@
 
 import { useState } from "react";
 import RestaurantCard from "@/components/RestaurantCard";
+import { restaurantDetailHref } from "@/lib/listQuery";
 import { LIMITS } from "@/lib/rules";
 import type { RestaurantListItem } from "@/lib/types";
 
 /** 결과 0곳 안내 (PRD 문구 그대로) */
 const NO_RESULT_MESSAGE = "조건에 맞는 식당이 없어요. 조건을 줄여 보세요";
 
+/** listQueryString: 지금 목록의 조건·검색어 (상세 화면에서 "목록으로" 돌아올 때 쓰려고 카드 주소에 붙임) */
 export default function RestaurantResults({
   restaurants,
+  listQueryString,
 }: {
   restaurants: RestaurantListItem[];
+  listQueryString: string;
 }) {
   const [visibleCount, setVisibleCount] = useState<number>(LIMITS.pageSize);
 
@@ -46,7 +50,10 @@ export default function RestaurantResults({
       <ul className="flex flex-col gap-3">
         {visible.map((restaurant) => (
           <li key={restaurant.id}>
-            <RestaurantCard restaurant={restaurant} />
+            <RestaurantCard
+              restaurant={restaurant}
+              href={restaurantDetailHref(restaurant.id, listQueryString)}
+            />
           </li>
         ))}
       </ul>
