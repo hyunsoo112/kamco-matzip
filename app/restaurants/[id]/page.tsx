@@ -6,9 +6,10 @@
 // "목록으로": 주소에 붙어 온 조건·검색어 그대로 목록 화면으로 돌아갑니다.
 //
 // PLAN 작업 14: 식당 정보와 평가 목록을 저장 공간(Supabase)에서 읽어 옵니다.
-// 평가 쓰기 칸은 PLAN 작업 15에서 붙입니다.
+// PLAN 작업 15: 평가 쓰기 칸(components/ReviewForm.tsx)을 붙였습니다.
 
 import Link from "next/link";
+import ReviewForm from "@/components/ReviewForm";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { listStateToHref, parseListState, type RawSearchParams } from "@/lib/listQuery";
@@ -95,6 +96,9 @@ async function RestaurantDetail({
           <InfoRow label="쉬는 날" value={restaurant.daysOff.join(", ")} />
         )}
       </dl>
+
+      {/* PLAN 작업 15: 평가 쓰기 칸 (DESIGN 3.2 순서대로 식당 정보 아래, 평가 목록 위) */}
+      <ReviewForm restaurantId={restaurant.id} />
 
       <section className="mt-6" aria-labelledby="reviews-title">
         <h2 id="reviews-title" className="text-lg font-semibold">
