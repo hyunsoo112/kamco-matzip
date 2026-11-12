@@ -9,6 +9,7 @@
 // PLAN 작업 15: 평가 쓰기 칸(components/ReviewForm.tsx)을 붙였습니다.
 
 import Link from "next/link";
+import PhotoGallery from "@/components/PhotoGallery";
 import ReviewForm from "@/components/ReviewForm";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -85,6 +86,8 @@ async function RestaurantDetail({
           </span>
         )}
       </header>
+
+      <PhotoGallery name={restaurant.name} photoUrls={restaurant.photoUrls ?? []} />
 
       <dl className="mt-4 divide-y divide-black/10 rounded-xl border border-black/10 px-4 dark:divide-white/10 dark:border-white/15">
         <InfoRow label="대표 메뉴" value={restaurant.signatureMenu} />

@@ -70,6 +70,8 @@ export interface Restaurant {
   priceRange: PriceRange;
   /** 쉬는 날 (없으면 빈 목록) */
   daysOff: DayOfWeek[];
+  /** 사진 주소 (최대 3장, 없으면 생략 또는 빈 목록) */
+  photoUrls?: string[];
 }
 
 /** 평가 (DESIGN 5.2 평가 표) — 기기 표시값은 화면에 보내지 않으므로 뺐습니다 */

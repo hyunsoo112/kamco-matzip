@@ -43,7 +43,7 @@ export function getDb(): SupabaseClient {
 
 /** 식당 표에서 읽어 올 칸 (device_id·name_key·created_* 는 읽지 않음) */
 export const RESTAURANT_COLUMNS =
-  "id, name, address, distance_km, cuisine, signature_menu, party_sizes, price_range, days_off";
+  "id, name, address, distance_km, cuisine, signature_menu, party_sizes, price_range, days_off, photo_urls";
 
 export interface RestaurantRow {
   id: string;
@@ -55,6 +55,7 @@ export interface RestaurantRow {
   party_sizes: string[];
   price_range: string;
   days_off: string[];
+  photo_urls: string[] | null;
 }
 
 /** 식당 줄 → 화면용 식당 (값은 저장 공간 규칙으로 이미 검사되어 있음) */
@@ -69,6 +70,7 @@ export function toRestaurant(row: RestaurantRow): Restaurant {
     partySizes: row.party_sizes as PartySize[],
     priceRange: row.price_range as PriceRange,
     daysOff: row.days_off as DayOfWeek[],
+    photoUrls: row.photo_urls ?? [],
   };
 }
 
