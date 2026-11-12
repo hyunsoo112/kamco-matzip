@@ -1,6 +1,6 @@
 // 식당 카드 한 장 (목록 화면)
 // PLAN 작업 6 (PRD 개발 단위 3) / 기준: DESIGN.md 3.1 목록 화면 "식당 카드"
-// 보여 주는 것: 이름, 음식 종류, 걸어서 걸리는 시간, 가격대, 평균 별점 또는 "평가 모으는 중"
+// 보여 주는 것: 이름, 음식 종류, 인재개발원에서 거리, 가격대, 평균 별점 또는 "평가 모으는 중"
 // PLAN 작업 12: 카드를 누르면 상세 화면으로 갑니다.
 
 import Link from "next/link";
@@ -24,7 +24,7 @@ export default function RestaurantCard({
   restaurant: RestaurantListItem;
   href: string;
 }) {
-  const { name, cuisine, walkMinutes, priceRange, avgRating } = restaurant;
+  const { name, cuisine, distanceKm, priceRange, avgRating } = restaurant;
 
   return (
     <Link href={href} className="block rounded-xl">
@@ -53,7 +53,7 @@ export default function RestaurantCard({
           </div>
 
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
-            {cuisine} · 걸어서 {walkMinutes}분 · {priceRange}
+            {cuisine} · {distanceKm}km 이내 · {priceRange}
           </p>
         </div>
       </article>

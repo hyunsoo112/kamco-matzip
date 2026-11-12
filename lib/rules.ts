@@ -9,7 +9,7 @@ import {
   DAYS_OF_WEEK,
   PARTY_SIZES,
   PRICE_RANGES,
-  WALK_MINUTES,
+  DISTANCE_KM,
   type Cuisine,
   type ErrorCode,
   type PartySize,
@@ -93,14 +93,14 @@ export function containsBannedWord(text: string): boolean {
 // ─────────────────────────────────────────────
 
 /**
- * 목록 정렬: 걸어서 걸리는 시간이 짧은 순(5분 → 10분 → 15분), 같으면 이름 가나다순.
+ * 목록 정렬: 인재개발원에서 가까운 순(1km → 5km → 10km 이내), 같으면 이름 가나다순.
  * 원래 목록은 그대로 두고, 정렬한 새 목록을 돌려줍니다.
  */
-export function sortByWalkThenName<
-  T extends { walkMinutes: number; name: string },
+export function sortByDistanceThenName<
+  T extends { distanceKm: number; name: string },
 >(restaurants: readonly T[]): T[] {
   return [...restaurants].sort(
-    (a, b) => a.walkMinutes - b.walkMinutes || a.name.localeCompare(b.name, "ko"),
+    (a, b) => a.distanceKm - b.distanceKm || a.name.localeCompare(b.name, "ko"),
   );
 }
 
@@ -278,7 +278,7 @@ export function validateReview(input: {
 export function validateNewRestaurant(input: {
   name: unknown;
   address: unknown;
-  walkMinutes: unknown;
+  distanceKm: unknown;
   cuisine: unknown;
   signatureMenu: unknown;
   partySizes: unknown;
@@ -296,11 +296,11 @@ export function validateNewRestaurant(input: {
     );
   if (lengthProblem) return lengthProblem;
 
-  if (!isOneOf(WALK_MINUTES, input.walkMinutes)) {
+  if (!isOneOf(DISTANCE_KM, input.distanceKm)) {
     return {
       code: "VALIDATION_ERROR",
-      message: "걸어서 걸리는 시간을 5분 / 10분 / 15분 중에서 골라 주세요",
-      field: "walkMinutes",
+      message: "인재개발원에서 거리를 1km / 5km / 10km 이내 중에서 골라 주세요",
+      field: "distanceKm",
     };
   }
   if (!isOneOf(CUISINES, input.cuisine)) {

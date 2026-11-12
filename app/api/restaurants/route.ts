@@ -1,7 +1,7 @@
 // 새 식당 등록 API — POST /api/restaurants
 // PLAN 작업 20 (PRD 개발 단위 17) / 기준: DESIGN.md 4.3 새 식당 등록, 6.1 ③ 새 식당 등록, 6.2 결과 코드
 //
-// 보내는 값: { name, address, walkMinutes, cuisine, signatureMenu, partySizes, priceRange, daysOff, deviceId }
+// 보내는 값: { name, address, distanceKm, cuisine, signatureMenu, partySizes, priceRange, daysOff, deviceId }
 // 받는 값 (201): { data: { id } }   ← 기기 표시값은 돌려주지 않음
 // 오류: { error: { code, message, field? } }
 //
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const problem = validateNewRestaurant({
     name: input.name,
     address: input.address,
-    walkMinutes: input.walkMinutes,
+    distanceKm: input.distanceKm,
     cuisine: input.cuisine,
     signatureMenu: input.signatureMenu,
     partySizes: input.partySizes,
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       name,
       name_key: makeNameKey(name),
       address: (input.address as string).trim(),
-      walk_minutes: input.walkMinutes as number,
+      distance_km: input.distanceKm as number,
       cuisine: input.cuisine as string,
       signature_menu: (input.signatureMenu as string).trim(),
       party_sizes: input.partySizes as string[],

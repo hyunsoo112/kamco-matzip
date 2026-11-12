@@ -32,7 +32,7 @@ const toRow = (r) => ({
   name: r.name,
   name_key: makeNameKey(r.name),
   address: r.address,
-  walk_minutes: r.walkMinutes,
+  distance_km: r.distanceKm,
   cuisine: r.cuisine,
   signature_menu: r.signatureMenu,
   party_sizes: r.partySizes,

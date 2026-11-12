@@ -6,10 +6,10 @@
 //   넣기:  npm run db:seed -- --with-test
 //   지우기: npm run db:seed -- --remove-test
 
-import type { Cuisine, PartySize, PriceRange, Restaurant, WalkMinutes } from "@/lib/types";
+import type { Cuisine, PartySize, PriceRange, Restaurant, DistanceKm } from "@/lib/types";
 
 const CUISINE_CYCLE: Cuisine[] = ["한식", "중식", "일식", "양식", "분식"];
-const WALK_CYCLE: WalkMinutes[] = [5, 10, 15];
+const DISTANCE_CYCLE: DistanceKm[] = [1, 5, 10];
 const PRICE_CYCLE: PriceRange[] = ["1만 원 미만", "1만~2만 원 미만", "2만 원 이상"];
 const PARTY_CYCLE: PartySize[][] = [["혼밥"], ["2~4명"], ["혼밥", "2~4명", "단체"]];
 
@@ -20,7 +20,7 @@ export const TEST_RESTAURANTS: Restaurant[] = Array.from({ length: 25 }, (_, i) 
     id: `test-${no}`,
     name: `[시험] 식당 ${no}`,
     address: `시험로 ${i + 1} (시험동)`,
-    walkMinutes: WALK_CYCLE[i % WALK_CYCLE.length],
+    distanceKm: DISTANCE_CYCLE[i % DISTANCE_CYCLE.length],
     cuisine: CUISINE_CYCLE[i % CUISINE_CYCLE.length],
     signatureMenu: `시험 메뉴 ${no}`,
     partySizes: PARTY_CYCLE[i % PARTY_CYCLE.length],

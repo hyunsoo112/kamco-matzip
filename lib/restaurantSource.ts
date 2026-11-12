@@ -19,7 +19,7 @@ import {
   averageRating,
   filterRestaurants,
   searchRestaurants,
-  sortByWalkThenName,
+  sortByDistanceThenName,
   todayInKorea,
   type RestaurantFilters,
 } from "./rules";
@@ -69,13 +69,13 @@ export async function getRestaurantList(
     loadRatingSummaries(),
   ]);
 
-  const found = sortByWalkThenName(searchRestaurants(filterRestaurants(restaurants, filters), query));
+  const found = sortByDistanceThenName(searchRestaurants(filterRestaurants(restaurants, filters), query));
 
-  return found.map(({ id, name, cuisine, walkMinutes, priceRange }) => ({
+  return found.map(({ id, name, cuisine, distanceKm, priceRange }) => ({
     id,
     name,
     cuisine,
-    walkMinutes,
+    distanceKm,
     priceRange,
     ...(summaries.get(id) ?? NO_REVIEWS),
   }));

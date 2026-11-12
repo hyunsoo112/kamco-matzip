@@ -1,7 +1,7 @@
 // 식당 상세 화면 (/restaurants/식당번호)
 // PLAN 작업 12 (PRD 개발 단위 9) / 기준: DESIGN.md 3.2 상세 화면
 //
-// 보여 주는 것: 이름, 음식 종류, 걸어서 걸리는 시간, 대표 메뉴, 가격대, 인원, 위치,
+// 보여 주는 것: 이름, 음식 종류, 인재개발원에서 거리,대표 메뉴, 가격대, 인원, 위치,
 //              쉬는 날(있을 때만), 평균 별점 또는 "평가 모으는 중", 교육생 평가 목록(최신순)
 // "목록으로": 주소에 붙어 온 조건·검색어 그대로 목록 화면으로 돌아갑니다.
 //
@@ -69,7 +69,7 @@ async function RestaurantDetail({
         <div className="min-w-0">
           <h1 className="text-2xl font-bold">{restaurant.name}</h1>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
-            {restaurant.cuisine} · 걸어서 {restaurant.walkMinutes}분
+            {restaurant.cuisine} · {restaurant.distanceKm}km 이내
           </p>
         </div>
         {/* 평가 3건 이상이면 평균 별점, 아니면 "평가 모으는 중" (DESIGN 3.2) */}

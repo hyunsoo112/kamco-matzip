@@ -3,7 +3,7 @@
 //
 // - 비밀 열쇠(SUPABASE_SERVICE_ROLE_KEY)는 .env에서 읽고, 서버 쪽 코드에서만 씁니다.
 //   이 파일을 휴대폰 화면 쪽 코드에서 불러오면 "server-only" 때문에 빌드가 멈춥니다.
-// - 저장 공간의 이름(name_key, walk_minutes …)과 화면의 이름(walkMinutes …)을 서로 바꿔 줍니다.
+// - 저장 공간의 이름(name_key, distance_km …)과 화면의 이름(distanceKm …)을 서로 바꿔 줍니다.
 // - 기기 표시값(device_id)은 읽어 오지 않습니다. (화면에 보내지 않기 위해)
 
 import "server-only";
@@ -15,7 +15,7 @@ import type {
   PriceRange,
   Restaurant,
   Review,
-  WalkMinutes,
+  DistanceKm,
 } from "./types";
 
 let client: SupabaseClient | null = null;
@@ -43,13 +43,13 @@ export function getDb(): SupabaseClient {
 
 /** 식당 표에서 읽어 올 칸 (device_id·name_key·created_* 는 읽지 않음) */
 export const RESTAURANT_COLUMNS =
-  "id, name, address, walk_minutes, cuisine, signature_menu, party_sizes, price_range, days_off";
+  "id, name, address, distance_km, cuisine, signature_menu, party_sizes, price_range, days_off";
 
 export interface RestaurantRow {
   id: string;
   name: string;
   address: string;
-  walk_minutes: number;
+  distance_km: number;
   cuisine: string;
   signature_menu: string;
   party_sizes: string[];
@@ -63,7 +63,7 @@ export function toRestaurant(row: RestaurantRow): Restaurant {
     id: row.id,
     name: row.name,
     address: row.address,
-    walkMinutes: row.walk_minutes as WalkMinutes,
+    distanceKm: row.distance_km as DistanceKm,
     cuisine: row.cuisine as Cuisine,
     signatureMenu: row.signature_menu,
     partySizes: row.party_sizes as PartySize[],

@@ -31,8 +31,8 @@ export const PRICE_RANGES = [
   "2만 원 이상",
 ] as const;
 
-/** 인재개발원에서 걸어서 걸리는 시간(분): 15분보다 먼 식당은 등록하지 않음 */
-export const WALK_MINUTES = [5, 10, 15] as const;
+/** 인재개발원에서 떨어진 거리(km 이내): 10km보다 먼 식당은 등록하지 않음 */
+export const DISTANCE_KM = [1, 5, 10] as const;
 
 /** 쉬는 날: 요일 버튼으로만 선택 (선택 입력) */
 export const DAYS_OF_WEEK = ["월", "화", "수", "목", "금", "토", "일"] as const;
@@ -41,7 +41,7 @@ export const DAYS_OF_WEEK = ["월", "화", "수", "목", "금", "토", "일"] as
 export type PartySize = (typeof PARTY_SIZES)[number];
 export type Cuisine = (typeof CUISINES)[number];
 export type PriceRange = (typeof PRICE_RANGES)[number];
-export type WalkMinutes = (typeof WALK_MINUTES)[number];
+export type DistanceKm = (typeof DISTANCE_KM)[number];
 export type DayOfWeek = (typeof DAYS_OF_WEEK)[number];
 
 // ─────────────────────────────────────────────
@@ -58,8 +58,8 @@ export interface Restaurant {
   name: string;
   /** 위치: "도로명 주소 (동 이름)" 형식 (최대 50글자) */
   address: string;
-  /** 걸어서 걸리는 시간 */
-  walkMinutes: WalkMinutes;
+  /** 인재개발원에서 떨어진 거리 (1 / 5 / 10km 이내) */
+  distanceKm: DistanceKm;
   /** 음식 종류 (하나) */
   cuisine: Cuisine;
   /** 대표 메뉴 (최대 30글자) */
@@ -97,7 +97,7 @@ export interface RatingSummary {
 /** ① 목록 카드 한 장 */
 export type RestaurantListItem = Pick<
   Restaurant,
-  "id" | "name" | "cuisine" | "walkMinutes" | "priceRange"
+  "id" | "name" | "cuisine" | "distanceKm" | "priceRange"
 > &
   RatingSummary;
 

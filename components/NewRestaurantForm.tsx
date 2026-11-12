@@ -3,7 +3,7 @@
 // 새 식당 등록 양식
 // PLAN 작업 20 (PRD 개발 단위 17) / 기준: DESIGN.md 3.3 새 식당 등록 화면, 4.3 새 식당 등록
 //
-// 필수 7가지(이름, 위치, 걸어서 걸리는 시간, 음식 종류, 대표 메뉴, 인원, 가격대)와 쉬는 날(선택)을 받습니다.
+// 필수 7가지(이름, 위치, 인재개발원에서 거리,음식 종류, 대표 메뉴, 인원, 가격대)와 쉬는 날(선택)을 받습니다.
 // 화면 쪽 1차 검사: lib/rules.ts의 validateNewRestaurant로 글자 수·선택지·개인정보·금지어를 검사합니다.
 //   - 필수 항목이 하나라도 비어 있으면 등록 버튼이 눌리지 않습니다.
 //   - 글자 칸은 최대 길이(이름 30·위치 50·대표 메뉴 30)를 넘게 입력할 수 없습니다.
@@ -22,20 +22,20 @@ import {
   DAYS_OF_WEEK,
   PARTY_SIZES,
   PRICE_RANGES,
-  WALK_MINUTES,
+  DISTANCE_KM,
   type ApiErrorResponse,
   type CreateRestaurantResponse,
   type Cuisine,
   type DayOfWeek,
   type PartySize,
   type PriceRange,
-  type WalkMinutes,
+  type DistanceKm,
 } from "@/lib/types";
 
 type Field =
   | "name"
   | "address"
-  | "walkMinutes"
+  | "distanceKm"
   | "cuisine"
   | "signatureMenu"
   | "partySizes"
@@ -91,7 +91,7 @@ export default function NewRestaurantForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [walkMinutes, setWalkMinutes] = useState<WalkMinutes | null>(null);
+  const [distanceKm, setDistanceKm] = useState<DistanceKm | null>(null);
   const [cuisine, setCuisine] = useState<Cuisine | null>(null);
   const [signatureMenu, setSignatureMenu] = useState("");
   const [partySizes, setPartySizes] = useState<PartySize[]>([]);
@@ -110,7 +110,7 @@ export default function NewRestaurantForm() {
   const problem = validateNewRestaurant({
     name,
     address,
-    walkMinutes: walkMinutes ?? undefined,
+    distanceKm: distanceKm ?? undefined,
     cuisine: cuisine ?? undefined,
     signatureMenu,
     partySizes,
@@ -151,7 +151,7 @@ export default function NewRestaurantForm() {
         body: JSON.stringify({
           name,
           address,
-          walkMinutes,
+          distanceKm,
           cuisine,
           signatureMenu,
           partySizes,
@@ -236,30 +236,30 @@ export default function NewRestaurantForm() {
       </p>
       <FieldMessage text={messageFor("address")} />
 
-      {/* 걸어서 걸리는 시간: 하나만 */}
+      {/* 인재개발원에서 떨어진 거리: 하나만 */}
       <fieldset className="mt-4">
         <legend className="text-sm font-medium">
-          인재개발원에서 걸어서 <span className="text-red-600">*</span>
+          인재개발원에서 거리 <span className="text-red-600">*</span>
         </legend>
         <div className="mt-1 flex flex-wrap gap-1.5">
-          {WALK_MINUTES.map((m) => (
+          {DISTANCE_KM.map((m) => (
             <Pill
               key={m}
               type="radio"
-              name="walkMinutes"
-              label={`${m}분`}
-              checked={walkMinutes === m}
+              name="distanceKm"
+              label={`${m}km 이내`}
+              checked={distanceKm === m}
               onChange={() => {
-                setWalkMinutes(m);
-                touch("walkMinutes");
+                setDistanceKm(m);
+                touch("distanceKm");
               }}
             >
-              {m}분
+              {m}km 이내
             </Pill>
           ))}
         </div>
       </fieldset>
-      <FieldMessage text={messageFor("walkMinutes")} />
+      <FieldMessage text={messageFor("distanceKm")} />
 
       {/* 음식 종류: 하나만 */}
       <fieldset className="mt-4">
