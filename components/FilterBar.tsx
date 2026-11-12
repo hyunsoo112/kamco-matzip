@@ -6,11 +6,12 @@
 
 import Link from "next/link";
 import {
+  clearFiltersHref,
   hasAnyFilter,
   toggleFilterHref,
   type FilterKind,
+  type ListState,
 } from "@/lib/listQuery";
-import type { RestaurantFilters } from "@/lib/rules";
 import { CUISINES, PARTY_SIZES, PRICE_RANGES } from "@/lib/types";
 
 /** 화면에 보일 줄 이름과 선택지 (DESIGN 3 "선택지 이름") */
@@ -25,7 +26,8 @@ function buttonText(value: string): string {
   return value === "단체" ? "단체(5명 이상)" : value;
 }
 
-export default function FilterBar({ filters }: { filters: RestaurantFilters }) {
+/** filters: 지금 목록 화면 상태 (조건 + 검색어). 버튼을 눌러도 검색어는 유지됩니다. */
+export default function FilterBar({ filters }: { filters: ListState }) {
   return (
     <section aria-label="조건 선택" className="flex flex-col gap-2">
       {ROWS.map(({ kind, label, choices }) => (
@@ -60,7 +62,7 @@ export default function FilterBar({ filters }: { filters: RestaurantFilters }) {
       {/* 고른 조건이 있을 때만 "조건 모두 지우기" 링크를 보여 줌 */}
       {hasAnyFilter(filters) && (
         <Link
-          href="/"
+          href={clearFiltersHref(filters)}
           scroll={false}
           className="self-end text-sm text-zinc-500 underline dark:text-zinc-400"
         >

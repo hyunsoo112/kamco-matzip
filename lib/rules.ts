@@ -133,6 +133,27 @@ export function filterRestaurants<
 }
 
 // ─────────────────────────────────────────────
+// 2-3. 검색 (PRD must ① 두 번째 규칙, DESIGN 4.1)
+// ─────────────────────────────────────────────
+
+/**
+ * 검색: 식당 이름·대표 메뉴·주소 중 하나에 검색어가 일부라도 들어 있으면 통과 (띄어쓰기 무시).
+ * 예) "김치 찌개" → 대표 메뉴 "김치찌개"인 식당, "가나동" → 주소 "임시로 11 (가나동)"인 식당
+ * 검색어가 비어 있으면 거르지 않습니다. (검색어 길이 검사는 validateSearchQuery에서 먼저 합니다)
+ */
+export function searchRestaurants<
+  T extends { name: string; signatureMenu: string; address: string },
+>(restaurants: readonly T[], query: string): T[] {
+  if (toCompareKey(query) === "") return [...restaurants];
+  return restaurants.filter(
+    (r) =>
+      matchesSearch(r.name, query) ||
+      matchesSearch(r.signatureMenu, query) ||
+      matchesSearch(r.address, query),
+  );
+}
+
+// ─────────────────────────────────────────────
 // 3. 평균 별점과 날짜
 // ─────────────────────────────────────────────
 
