@@ -10,7 +10,10 @@ import {
   PARTY_SIZES,
   PRICE_RANGES,
   WALK_MINUTES,
+  type Cuisine,
   type ErrorCode,
+  type PartySize,
+  type PriceRange,
 } from "./types";
 
 // ─────────────────────────────────────────────
@@ -98,6 +101,34 @@ export function sortByWalkThenName<
 >(restaurants: readonly T[]): T[] {
   return [...restaurants].sort(
     (a, b) => a.walkMinutes - b.walkMinutes || a.name.localeCompare(b.name, "ko"),
+  );
+}
+
+// ─────────────────────────────────────────────
+// 2-2. 조건으로 걸러 보기 (PRD must ① 첫 번째 규칙, DESIGN 4.1)
+// ─────────────────────────────────────────────
+
+/** 조건 선택값 (고르지 않은 종류는 빈 목록 = 그 종류는 거르지 않음) */
+export interface RestaurantFilters {
+  partySizes: readonly PartySize[];
+  cuisines: readonly Cuisine[];
+  priceRanges: readonly PriceRange[];
+}
+
+/**
+ * 조건으로 거르기: 같은 종류 안에서는 "또는", 다른 종류끼리는 "그리고".
+ * 예) 한식·중식 + 1만 원 미만 → (한식 또는 중식) 그리고 (1만 원 미만)
+ * 인원은 한 식당이 여러 개를 가지므로, 고른 인원 중 하나라도 맞으면 통과합니다.
+ */
+export function filterRestaurants<
+  T extends { partySizes: readonly PartySize[]; cuisine: Cuisine; priceRange: PriceRange },
+>(restaurants: readonly T[], filters: RestaurantFilters): T[] {
+  return restaurants.filter(
+    (r) =>
+      (filters.partySizes.length === 0 ||
+        r.partySizes.some((p) => filters.partySizes.includes(p))) &&
+      (filters.cuisines.length === 0 || filters.cuisines.includes(r.cuisine)) &&
+      (filters.priceRanges.length === 0 || filters.priceRanges.includes(r.priceRange)),
   );
 }
 
