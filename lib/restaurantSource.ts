@@ -1,27 +1,112 @@
-// 식당 목록을 어디서 가져올지 한 곳에 모은 파일 (서버 전용)
-// PLAN 작업 10 / 저장 공간 연결(PLAN 작업 14) 전까지 쓰는 임시 출처입니다.
+// 식당·평가를 저장 공간(Supabase)에서 읽어 오는 곳 (서버 전용)
+// PLAN 작업 14 (PRD 개발 단위 11) / 기준: DESIGN.md 4.1 식당 찾기, 5번 데이터 모양
 //
-// - 평소: 미리 넣은 10곳(data/seed-restaurants.ts)
-// - 시험할 때: 개발 서버를 INCLUDE_TEST_RESTAURANTS=1로 켜면 시험용 25곳을 뒤에 더함
-// PLAN 작업 14에서 이 파일만 Supabase에서 읽어 오도록 바꾸면, 화면 코드는 그대로 둘 수 있습니다.
+// 화면 코드는 이 파일의 함수만 부르면 되고, 저장 공간을 어떻게 읽는지는 몰라도 됩니다.
+// 거르기·검색·정렬·평균 별점은 lib/rules.ts의 같은 규칙을 그대로 씁니다.
+// (식당 수가 수십~수백 곳 수준이라, 한 번에 읽어 와서 규칙을 적용해도 충분히 빠릅니다)
 
-import { SEED_RESTAURANTS } from "@/data/seed-restaurants";
-import { TEST_RESTAURANTS } from "@/data/test-restaurants";
-import type { Restaurant } from "./types";
+import "server-only";
+import {
+  getDb,
+  RESTAURANT_COLUMNS,
+  REVIEW_COLUMNS,
+  toRestaurant,
+  toReview,
+  type RestaurantRow,
+  type ReviewRow,
+} from "./db";
+import {
+  averageRating,
+  filterRestaurants,
+  searchRestaurants,
+  sortByWalkThenName,
+  type RestaurantFilters,
+} from "./rules";
+import type { RatingSummary, Restaurant, RestaurantListItem, Review } from "./types";
 
-/** 시험용 식당을 더할지 (배포 화면에서는 이 값을 넣지 않으므로 항상 꺼져 있음) */
-function includeTestRestaurants(): boolean {
-  return process.env.INCLUDE_TEST_RESTAURANTS === "1";
+/** 저장 공간을 읽다 문제가 생겼을 때 (화면에서 "잠시 후 다시 시도" 안내에 사용) */
+export class DataLoadError extends Error {}
+
+/** 모든 식당 */
+async function loadAllRestaurants(): Promise<Restaurant[]> {
+  const { data, error } = await getDb().from("restaurants").select(RESTAURANT_COLUMNS);
+  if (error) throw new DataLoadError(`식당 목록을 읽지 못했습니다: ${error.message}`);
+  return (data as RestaurantRow[]).map(toRestaurant);
 }
 
-/** 식당 번호로 한 곳 찾기 (없으면 null) — 상세 화면(PLAN 작업 12)에서 사용 */
-export function getRestaurantById(id: string): Restaurant | null {
-  return getAllRestaurants().find((r) => r.id === id) ?? null;
+/** 식당별 평가 수·평균 별점 (평가 3건 미만이면 평균 없음) */
+async function loadRatingSummaries(): Promise<Map<string, RatingSummary>> {
+  const { data, error } = await getDb().from("reviews").select("restaurant_id, rating");
+  if (error) throw new DataLoadError(`평가를 읽지 못했습니다: ${error.message}`);
+
+  const ratingsById = new Map<string, number[]>();
+  for (const row of data as { restaurant_id: string; rating: number }[]) {
+    const list = ratingsById.get(row.restaurant_id) ?? [];
+    list.push(row.rating);
+    ratingsById.set(row.restaurant_id, list);
+  }
+
+  const summaries = new Map<string, RatingSummary>();
+  for (const [id, ratings] of ratingsById) {
+    summaries.set(id, { reviewCount: ratings.length, avgRating: averageRating(ratings) });
+  }
+  return summaries;
 }
 
-/** 지금 보여 줄 수 있는 모든 식당 */
-export function getAllRestaurants(): Restaurant[] {
-  return includeTestRestaurants()
-    ? [...SEED_RESTAURANTS, ...TEST_RESTAURANTS]
-    : [...SEED_RESTAURANTS];
+const NO_REVIEWS: RatingSummary = { reviewCount: 0, avgRating: null };
+
+/**
+ * 목록 화면용: 조건으로 거르고, 검색어로 찾고, 가까운 순으로 정렬한 카드 목록.
+ * query는 길이 검사를 통과한 검색어(없으면 "")를 넘겨 주세요.
+ */
+export async function getRestaurantList(
+  filters: RestaurantFilters,
+  query: string,
+): Promise<RestaurantListItem[]> {
+  const [restaurants, summaries] = await Promise.all([
+    loadAllRestaurants(),
+    loadRatingSummaries(),
+  ]);
+
+  const found = sortByWalkThenName(searchRestaurants(filterRestaurants(restaurants, filters), query));
+
+  return found.map(({ id, name, cuisine, walkMinutes, priceRange }) => ({
+    id,
+    name,
+    cuisine,
+    walkMinutes,
+    priceRange,
+    ...(summaries.get(id) ?? NO_REVIEWS),
+  }));
+}
+
+/** 상세 화면용: 식당 정보 + 평가 목록(최신순) + 평균 별점. 없는 식당이면 null */
+export async function getRestaurantDetail(
+  id: string,
+): Promise<(Restaurant & RatingSummary & { reviews: Review[] }) | null> {
+  const db = getDb();
+  const [restaurantResult, reviewsResult] = await Promise.all([
+    db.from("restaurants").select(RESTAURANT_COLUMNS).eq("id", id).maybeSingle(),
+    db
+      .from("reviews")
+      .select(REVIEW_COLUMNS)
+      .eq("restaurant_id", id)
+      .order("created_at", { ascending: false }),
+  ]);
+
+  if (restaurantResult.error) {
+    throw new DataLoadError(`식당 정보를 읽지 못했습니다: ${restaurantResult.error.message}`);
+  }
+  if (reviewsResult.error) {
+    throw new DataLoadError(`평가를 읽지 못했습니다: ${reviewsResult.error.message}`);
+  }
+  if (!restaurantResult.data) return null;
+
+  const reviews = (reviewsResult.data as ReviewRow[]).map(toReview);
+  return {
+    ...toRestaurant(restaurantResult.data as RestaurantRow),
+    reviews,
+    reviewCount: reviews.length,
+    avgRating: averageRating(reviews.map((r) => r.rating)),
+  };
 }

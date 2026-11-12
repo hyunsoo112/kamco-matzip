@@ -5,28 +5,28 @@
 //              쉬는 날(있을 때만), 평균 별점 또는 "평가 모으는 중", 교육생 평가 목록(최신순)
 // "목록으로": 주소에 붙어 온 조건·검색어 그대로 목록 화면으로 돌아갑니다.
 //
-// 평가 쓰기 칸은 PLAN 작업 15에서, 평가 목록의 실제 데이터는 저장 공간 연결(작업 14) 후 채웁니다.
+// PLAN 작업 14: 식당 정보와 평가 목록을 저장 공간(Supabase)에서 읽어 옵니다.
+// 평가 쓰기 칸은 PLAN 작업 15에서 붙입니다.
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { listStateToHref, parseListState, type RawSearchParams } from "@/lib/listQuery";
-import { getRestaurantById } from "@/lib/restaurantSource";
-import type { PartySize, Restaurant, Review } from "@/lib/types";
+import { getRestaurantDetail } from "@/lib/restaurantSource";
+import type { PartySize } from "@/lib/types";
 
 /** 인원 글자 ("단체"는 몇 명부터인지 함께 보여 줌) */
 function partySizeText(partySizes: readonly PartySize[]): string {
   return partySizes.map((p) => (p === "단체" ? "단체(5명 이상)" : p)).join(", ");
 }
 
-/** 날짜 글자 (예: "11/10") */
+/** 날짜 글자, 한국 시간 기준 (예: "11/10") */
 function shortDate(iso: string): string {
-  const date = new Date(iso);
-  return date.toLocaleDateString("ko-KR", {
-    month: "numeric",
-    day: "numeric",
-    timeZone: "Asia/Seoul",
-  });
+  // "sv-SE" 형식은 "2026-11-10"처럼 나와서 월·일을 꺼내기 쉽습니다.
+  const [, month, day] = new Date(iso)
+    .toLocaleDateString("sv-SE", { timeZone: "Asia/Seoul" })
+    .split("-");
+  return `${Number(month)}/${Number(day)}`;
 }
 
 /** 식당 정보 한 줄 (이름표 + 내용) */
@@ -50,12 +50,10 @@ async function RestaurantDetail({
   const { id } = await params;
   const backHref = listStateToHref(parseListState(await searchParams));
 
-  const restaurant: Restaurant | null = getRestaurantById(decodeURIComponent(id));
+  const restaurant = await getRestaurantDetail(decodeURIComponent(id));
   if (!restaurant) notFound();
 
-  // 저장 공간 연결 전이라 평가는 아직 없습니다. (PLAN 작업 14·15에서 채움)
-  const reviews: Review[] = [];
-  const avgRating: number | null = null;
+  const { reviews, avgRating } = restaurant;
 
   return (
     <>
@@ -82,7 +80,7 @@ async function RestaurantDetail({
           <span className="shrink-0 pt-1 text-lg font-semibold">
             <span aria-hidden>⭐ </span>
             <span className="sr-only">평균 별점 </span>
-            {(avgRating as number).toFixed(1)}
+            {avgRating.toFixed(1)}
           </span>
         )}
       </header>

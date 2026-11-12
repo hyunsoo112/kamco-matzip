@@ -4,8 +4,8 @@
 // PLAN 작업 8 (PRD 개발 단위 5): 인원·음식 종류·가격대 조건 버튼으로 걸러 봅니다.
 // PLAN 작업 9 (PRD 개발 단위 6): 검색창으로 이름·대표 메뉴·주소에서 찾습니다. (검색어 1~20글자)
 // PLAN 작업 10 (PRD 개발 단위 7): 20곳씩 보여 주고 "더 보기"로 20곳씩 더 보여 줍니다.
-// - 식당은 lib/restaurantSource.ts에서 가져옵니다. 저장 공간 연결 후(PLAN 작업 14) 그 파일만 바꿉니다.
 // PLAN 작업 11 (PRD 개발 단위 8): 결과가 0곳이면 안내 문구를 보여 줍니다. (components/RestaurantResults.tsx)
+// PLAN 작업 14 (PRD 개발 단위 11): 식당과 평균 별점을 저장 공간(Supabase)에서 읽어 옵니다. (lib/restaurantSource.ts)
 
 import { Suspense } from "react";
 import FilterBar from "@/components/FilterBar";
@@ -16,33 +16,8 @@ import {
   parseListState,
   type RawSearchParams,
 } from "@/lib/listQuery";
-import { getAllRestaurants } from "@/lib/restaurantSource";
-import {
-  filterRestaurants,
-  searchRestaurants,
-  sortByWalkThenName,
-  toCompareKey,
-  validateSearchQuery,
-  type RestaurantFilters,
-} from "@/lib/rules";
-import type { RestaurantListItem } from "@/lib/types";
-
-/** 조건·검색어로 거르고 정렬한 뒤, 목록 카드에 필요한 값만 골라 냅니다. (아직 평가가 없어 평균 별점 없음) */
-function toListItems(filters: RestaurantFilters, query: string): RestaurantListItem[] {
-  const filtered = filterRestaurants(getAllRestaurants(), filters);
-  const searched = searchRestaurants(filtered, query);
-  return sortByWalkThenName(searched).map(
-    ({ id, name, cuisine, walkMinutes, priceRange }) => ({
-      id,
-      name,
-      cuisine,
-      walkMinutes,
-      priceRange,
-      reviewCount: 0,
-      avgRating: null,
-    }),
-  );
-}
+import { getRestaurantList } from "@/lib/restaurantSource";
+import { toCompareKey, validateSearchQuery } from "@/lib/rules";
 
 /** 주소에 담긴 조건·검색어를 읽어 검색창, 조건 버튼, 목록을 그립니다. (주소를 읽는 부분만 요청 때 그림) */
 async function RestaurantList({
@@ -58,7 +33,8 @@ async function RestaurantList({
   const searchProblem = hasQuery ? validateSearchQuery(state.q) : null;
   const query = hasQuery && !searchProblem ? state.q : "";
 
-  const restaurants = toListItems(state, query);
+  // 조건·검색어로 거르고 가까운 순으로 정렬한 식당 (평균 별점 포함)
+  const restaurants = await getRestaurantList(state, query);
   // 지금 목록의 조건·검색어 (카드 → 상세 → "목록으로"에서 그대로 돌아오기 위해 사용)
   const listQueryString = listStateToQueryString({ ...state, q: query });
 

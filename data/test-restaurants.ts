@@ -2,9 +2,9 @@
 // PLAN 작업 10 / 기준: DESIGN.md 5.3 "시험용 25곳", 8번 확인 계획 5번(더 보기)
 //
 // "더 보기"처럼 식당이 21곳 이상 있어야 확인할 수 있는 기능을 시험할 때만 씁니다.
-// 평소 화면에는 나오지 않고, 개발 서버를 아래처럼 켤 때만 미리 넣은 10곳 뒤에 더해집니다.
-//   PowerShell: $env:INCLUDE_TEST_RESTAURANTS="1"; npm run dev
-// 저장 공간 연결 후(PLAN 작업 14)에는 시험할 때만 넣고, 끝나면 "[시험]"으로 시작하는 식당을 지웁니다.
+// 시험할 때만 저장 공간에 넣고, 끝나면 "[시험]"으로 시작하는 식당을 지웁니다. (PLAN 작업 14부터)
+//   넣기:  npm run db:seed -- --with-test
+//   지우기: npm run db:seed -- --remove-test
 
 import type { Cuisine, PartySize, PriceRange, Restaurant, WalkMinutes } from "@/lib/types";
 
