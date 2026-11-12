@@ -3,15 +3,16 @@
 // PLAN 작업 7 (PRD 개발 단위 4): 걸어서 걸리는 시간이 짧은 순, 같으면 이름 가나다순으로 정렬합니다.
 // PLAN 작업 8 (PRD 개발 단위 5): 인원·음식 종류·가격대 조건 버튼으로 걸러 봅니다.
 // PLAN 작업 9 (PRD 개발 단위 6): 검색창으로 이름·대표 메뉴·주소에서 찾습니다. (검색어 1~20글자)
-// - 지금은 data/seed-restaurants.ts를 직접 읽습니다. 저장 공간 연결 후(PLAN 작업 14) 바꿉니다.
-// - 더 보기(작업 10), 0곳 안내(작업 11)는 이어서 붙입니다.
+// PLAN 작업 10 (PRD 개발 단위 7): 20곳씩 보여 주고 "더 보기"로 20곳씩 더 보여 줍니다.
+// - 식당은 lib/restaurantSource.ts에서 가져옵니다. 저장 공간 연결 후(PLAN 작업 14) 그 파일만 바꿉니다.
+// - 0곳 안내(작업 11)는 이어서 붙입니다.
 
 import { Suspense } from "react";
 import FilterBar from "@/components/FilterBar";
-import RestaurantCard from "@/components/RestaurantCard";
+import RestaurantResults from "@/components/RestaurantResults";
 import SearchBox from "@/components/SearchBox";
-import { SEED_RESTAURANTS } from "@/data/seed-restaurants";
-import { parseListState, type RawSearchParams } from "@/lib/listQuery";
+import { listStateToHref, parseListState, type RawSearchParams } from "@/lib/listQuery";
+import { getAllRestaurants } from "@/lib/restaurantSource";
 import {
   filterRestaurants,
   searchRestaurants,
@@ -24,7 +25,7 @@ import type { RestaurantListItem } from "@/lib/types";
 
 /** 조건·검색어로 거르고 정렬한 뒤, 목록 카드에 필요한 값만 골라 냅니다. (아직 평가가 없어 평균 별점 없음) */
 function toListItems(filters: RestaurantFilters, query: string): RestaurantListItem[] {
-  const filtered = filterRestaurants(SEED_RESTAURANTS, filters);
+  const filtered = filterRestaurants(getAllRestaurants(), filters);
   const searched = searchRestaurants(filtered, query);
   return sortByWalkThenName(searched).map(
     ({ id, name, cuisine, walkMinutes, priceRange }) => ({
@@ -71,13 +72,11 @@ async function RestaurantList({
       <p className="mt-4 mb-3 text-sm text-zinc-600 dark:text-zinc-400">
         {query && <>&ldquo;{query.trim()}&rdquo; 검색 결과 · </>}식당 {restaurants.length}곳
       </p>
-      <ul className="flex flex-col gap-3">
-        {restaurants.map((restaurant) => (
-          <li key={restaurant.id}>
-            <RestaurantCard restaurant={restaurant} />
-          </li>
-        ))}
-      </ul>
+      {/* 조건·검색어가 바뀌면 key가 바뀌어 "더 보기"로 늘린 개수가 처음(20곳)으로 돌아갑니다 */}
+      <RestaurantResults
+        key={listStateToHref({ ...state, q: query })}
+        restaurants={restaurants}
+      />
     </>
   );
 }
