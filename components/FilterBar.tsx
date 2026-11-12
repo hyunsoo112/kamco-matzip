@@ -1,4 +1,4 @@
-// 조건 버튼 묶음 (인원·음식 종류·가격대)
+// 조건 버튼 묶음 (인원·음식 종류·가격대·평점)
 // PLAN 작업 8 (PRD 개발 단위 5) / 기준: DESIGN.md 3.1 목록 화면 "조건 버튼"
 //
 // 버튼은 인터넷 주소를 바꾸는 링크입니다. 누르면 그 조건을 더하거나 빼고,
@@ -9,10 +9,11 @@ import {
   clearFiltersHref,
   hasAnyFilter,
   toggleFilterHref,
+  toggleRatingHref,
   type FilterKind,
   type ListState,
 } from "@/lib/listQuery";
-import { CUISINES, PARTY_SIZES, PRICE_RANGES } from "@/lib/types";
+import { CUISINES, MIN_RATINGS, PARTY_SIZES, PRICE_RANGES } from "@/lib/types";
 
 /** 화면에 보일 줄 이름과 선택지 (DESIGN 3 "선택지 이름") */
 const ROWS: { kind: FilterKind; label: string; choices: readonly string[] }[] = [
@@ -58,6 +59,34 @@ export default function FilterBar({ filters }: { filters: ListState }) {
           </div>
         </div>
       ))}
+
+      {/* 평점 기준: 하나만 선택 (4.0 / 4.5 / 4.8 이상). 평가 3건 이상이라 평균이 있는 식당만 나옵니다. */}
+      <div className="flex items-start gap-2">
+        <span className="w-8 shrink-0 pt-1.5 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          평점
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {MIN_RATINGS.map((value) => {
+            const selected = filters.minRating === value;
+            return (
+              <Link
+                key={value}
+                href={toggleRatingHref(filters, value)}
+                scroll={false}
+                className={
+                  "rounded-full border px-3 py-1.5 text-sm transition-colors " +
+                  (selected
+                    ? "border-orange-500 bg-orange-500 font-semibold text-white"
+                    : "border-black/15 bg-white text-zinc-800 dark:border-white/20 dark:bg-white/5 dark:text-zinc-200")
+                }
+              >
+                {value.toFixed(1)} 이상
+                {selected && <span className="sr-only"> (선택됨)</span>}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
 
       {/* 고른 조건이 있을 때만 "조건 모두 지우기" 링크를 보여 줌 */}
       {hasAnyFilter(filters) && (

@@ -17,6 +17,7 @@ import {
 } from "./db";
 import {
   averageRating,
+  filterByMinRating,
   filterRestaurants,
   searchRestaurants,
   sortByDistanceThenName,
@@ -71,7 +72,7 @@ export async function getRestaurantList(
 
   const found = sortByDistanceThenName(searchRestaurants(filterRestaurants(restaurants, filters), query));
 
-  return found.map(({ id, name, cuisine, distanceKm, priceRange }) => ({
+  const cards = found.map(({ id, name, cuisine, distanceKm, priceRange }) => ({
     id,
     name,
     cuisine,
@@ -79,6 +80,9 @@ export async function getRestaurantList(
     priceRange,
     ...(summaries.get(id) ?? NO_REVIEWS),
   }));
+
+  // 평점 기준은 평균 별점이 있어야 비교할 수 있어서, 평균을 붙인 뒤에 거릅니다.
+  return filterByMinRating(cards, filters.minRating);
 }
 
 /**

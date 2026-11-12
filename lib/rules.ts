@@ -11,6 +11,7 @@ import {
   PRICE_RANGES,
   DISTANCE_KM,
   type Cuisine,
+  type MinRating,
   type ErrorCode,
   type PartySize,
   type PriceRange,
@@ -113,6 +114,8 @@ export interface RestaurantFilters {
   partySizes: readonly PartySize[];
   cuisines: readonly Cuisine[];
   priceRanges: readonly PriceRange[];
+  /** 평점 기준: 평균 별점이 이 값 이상인 식당만 (고르지 않으면 null) */
+  minRating: MinRating | null;
 }
 
 /**
@@ -162,6 +165,18 @@ export function averageRating(ratings: readonly number[]): number | null {
   if (ratings.length < LIMITS.minReviewsForAverage) return null;
   const sum = ratings.reduce((total, r) => total + r, 0);
   return Math.round((sum / ratings.length) * 10) / 10;
+}
+
+/**
+ * 평점 기준으로 거르기: 평균 별점이 기준 이상인 식당만 남깁니다.
+ * 평가가 3건 미만이라 평균이 없는 식당(avgRating이 null)은 기준을 고르면 빠집니다.
+ */
+export function filterByMinRating<T extends { avgRating: number | null }>(
+  restaurants: readonly T[],
+  minRating: MinRating | null,
+): T[] {
+  if (minRating === null) return [...restaurants];
+  return restaurants.filter((r) => r.avgRating !== null && r.avgRating >= minRating);
 }
 
 /** 한국 시간 기준 오늘 날짜 (예: "2026-11-12") — 하루 1번·하루 3곳 규칙에 사용 */

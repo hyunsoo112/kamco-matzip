@@ -7,9 +7,11 @@
 import type { RestaurantFilters } from "./rules";
 import {
   CUISINES,
+  MIN_RATINGS,
   PARTY_SIZES,
   PRICE_RANGES,
   type Cuisine,
+  type MinRating,
   type PartySize,
   type PriceRange,
 } from "./types";
@@ -20,6 +22,9 @@ const PARAM_NAMES = {
   cuisines: "cuisine",
   priceRanges: "price",
 } as const;
+
+/** 평점 기준을 담는 주소 이름 (예: rating=4.5) */
+export const RATING_PARAM = "rating";
 
 /** 검색어를 담는 주소 이름 */
 export const SEARCH_PARAM = "q";
@@ -43,6 +48,12 @@ function readList<T extends string>(
   return choices.filter((choice) => picked.includes(choice));
 }
 
+/** 주소의 평점 기준 → 4.0 / 4.5 / 4.8 중 하나, 아니면 null (이상한 값은 조용히 무시) */
+function readMinRating(raw: string | string[] | undefined): MinRating | null {
+  const text = (Array.isArray(raw) ? raw[0] : raw) ?? "";
+  return MIN_RATINGS.find((v) => v.toFixed(1) === text.trim()) ?? null;
+}
+
 /** 주소 값 → 목록 화면 상태. 검색어는 받은 그대로 두고, 길이 검사는 화면에서 따로 합니다. */
 export function parseListState(params: RawSearchParams): ListState {
   const rawQ = params[SEARCH_PARAM];
@@ -50,6 +61,7 @@ export function parseListState(params: RawSearchParams): ListState {
     partySizes: readList<PartySize>(params[PARAM_NAMES.partySizes], PARTY_SIZES),
     cuisines: readList<Cuisine>(params[PARAM_NAMES.cuisines], CUISINES),
     priceRanges: readList<PriceRange>(params[PARAM_NAMES.priceRanges], PRICE_RANGES),
+    minRating: readMinRating(params[RATING_PARAM]),
     q: (Array.isArray(rawQ) ? rawQ[0] : rawQ) ?? "",
   };
 }
@@ -58,9 +70,13 @@ export function parseListState(params: RawSearchParams): ListState {
 export function filterParamEntries(
   filters: RestaurantFilters,
 ): { name: string; value: string }[] {
-  return (Object.keys(PARAM_NAMES) as FilterKind[])
+  const entries: { name: string; value: string }[] = (Object.keys(PARAM_NAMES) as FilterKind[])
     .filter((kind) => filters[kind].length > 0)
     .map((kind) => ({ name: PARAM_NAMES[kind], value: filters[kind].join(",") }));
+  if (filters.minRating !== null) {
+    entries.push({ name: RATING_PARAM, value: filters.minRating.toFixed(1) });
+  }
+  return entries;
 }
 
 /** 목록 화면 상태 → 주소 뒤에 붙일 글자 (예: "cuisine=한식&q=찌개"). 아무것도 없으면 "" */
@@ -100,9 +116,14 @@ export function toggleFilterHref(
   return listStateToHref({ ...state, [kind]: next });
 }
 
+/** 평점 기준 버튼을 눌렀을 때 갈 주소: 이미 고른 기준이면 해제, 아니면 그 기준으로 바꿈 (하나만 선택) */
+export function toggleRatingHref(state: ListState, value: MinRating): string {
+  return listStateToHref({ ...state, minRating: state.minRating === value ? null : value });
+}
+
 /** "조건 모두 지우기": 조건만 지우고 검색어는 유지 */
 export function clearFiltersHref(state: ListState): string {
-  return listStateToHref({ partySizes: [], cuisines: [], priceRanges: [], q: state.q });
+  return listStateToHref({ partySizes: [], cuisines: [], priceRanges: [], minRating: null, q: state.q });
 }
 
 /** "검색어 지우기": 검색어만 지우고 조건은 유지 */
@@ -113,6 +134,7 @@ export function clearSearchHref(state: ListState): string {
 /** 하나라도 고른 조건이 있는지 */
 export function hasAnyFilter(filters: RestaurantFilters): boolean {
   return (
-    filters.partySizes.length + filters.cuisines.length + filters.priceRanges.length > 0
+    filters.partySizes.length + filters.cuisines.length + filters.priceRanges.length > 0 ||
+    filters.minRating !== null
   );
 }

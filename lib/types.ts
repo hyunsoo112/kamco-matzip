@@ -34,6 +34,9 @@ export const PRICE_RANGES = [
 /** 인재개발원에서 떨어진 거리(km 이내): 10km보다 먼 식당은 등록하지 않음 */
 export const DISTANCE_KM = [1, 5, 10] as const;
 
+/** 평점 기준: 평균 별점이 이 값 이상인 식당만 보기 (하나만 선택, 평가 3건 이상이라 평균이 있는 식당만 해당) */
+export const MIN_RATINGS = [4.0, 4.5, 4.8] as const;
+
 /** 쉬는 날: 요일 버튼으로만 선택 (선택 입력) */
 export const DAYS_OF_WEEK = ["월", "화", "수", "목", "금", "토", "일"] as const;
 
@@ -42,6 +45,7 @@ export type PartySize = (typeof PARTY_SIZES)[number];
 export type Cuisine = (typeof CUISINES)[number];
 export type PriceRange = (typeof PRICE_RANGES)[number];
 export type DistanceKm = (typeof DISTANCE_KM)[number];
+export type MinRating = (typeof MIN_RATINGS)[number];
 export type DayOfWeek = (typeof DAYS_OF_WEEK)[number];
 
 // ─────────────────────────────────────────────
@@ -108,6 +112,8 @@ export interface RestaurantSearchQuery {
   partySizes: PartySize[];
   cuisines: Cuisine[];
   priceRanges: PriceRange[];
+  /** 평점 기준 (4.0 / 4.5 / 4.8 이상, 고르지 않으면 null) */
+  minRating: MinRating | null;
   /** 검색어 (1~20글자, 없으면 빈 글자) */
   q: string;
   /** 몇 번째부터 (0, 20, 40 …) */
