@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 캠코인재개발원 맛집 지도
 
-## Getting Started
+> 캠코인재개발원에 교육받으러 온 교육생이 **주변 맛집을 빠르게 찾고**, 다녀온 뒤 **직접 평가와 새 식당을 남겨** 다음 기수까지 이어지게 하는 휴대폰용 웹 서비스입니다.
 
-First, run the development server:
+- **서비스 주소:** (배포 후 이 줄에 적습니다)
+- **만든 사람:** 정현수
+- **상태:** 기능 구현 완료. 지금 들어 있는 식당 10곳은 **시연용 임시 데이터**(이름 앞에 `[임시]`, 주소도 가짜)이며, 실제 식당 정보로 교체할 예정입니다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 왜 만들었나요?
+
+교육생은 대부분 이 지역이 처음이라 식사 장소를 고르는 데 시간을 쓰고, 지도 앱 후기에는 광고성 글이 섞여 있으며, 같은 기수가 쌓은 경험은 교육이 끝나면 사라집니다.
+그래서 **혼밥인지·단체로 가도 되는지·가격대가 얼마인지** 같은 교육생에게 필요한 기준으로 식당을 찾게 하고, 교육생이 직접 평가와 식당을 더해 가는 **쌍방향 맛집 지도**로 만들었습니다.
+
+## 주요 기능
+
+**① 식당 찾기**
+- 인원(혼밥 / 2~4명 / 단체) · 음식 종류 · 1인 가격대 버튼으로 걸러 보기 (같은 종류 안에서는 "또는", 다른 종류끼리는 "그리고")
+- 식당 이름·대표 메뉴·동네로 검색 (띄어쓰기 무시, 1~20글자)
+- 인재개발원에서 **걸어서 가까운 순**으로 정렬, 20곳씩 보여 주고 "더 보기"
+- 결과가 없으면 "조건에 맞는 식당이 없어요. 조건을 줄여 보세요" 안내
+
+**② 평가 남기기 + 새 식당 등록**
+- 별명 · 별점(1~5) · 한 줄 평 남기기, 평가가 3건 이상이면 평균 별점 표시
+- 목록에 없는 식당을 직접 등록 (필수 7가지 + 쉬는 날)
+- 전화번호·이메일(개인정보)과 욕설(금지어)은 **화면과 서버에서 모두** 막음
+- 같은 휴대폰은 한 식당에 **하루 1번** 평가, 새 식당은 **하루 3곳**까지
+- 같은 이름(띄어쓰기만 다른 이름 포함)은 막고 "지점명을 붙여 주세요" 안내
+- 인터넷이 끊기거나 서버 오류가 나도 **입력한 내용을 지우지 않고** "다시 시도" 버튼 제공
+
+로그인·관리자·결제·사진 올리기·챗봇·댓글은 **일부러 만들지 않았습니다**(교육생끼리 가볍게 쓰는 서비스).
+
+## 기술
+
+| 도구 | 하는 일 |
+|---|---|
+| [Next.js](https://nextjs.org) 16 (App Router) + TypeScript | 화면과 서버 API를 한 프로젝트에서 처리 |
+| Tailwind CSS | 휴대폰 화면 꾸미기 |
+| [Supabase](https://supabase.com) | 식당과 평가를 보관하는 저장 공간 (서버에서만 접근, 외부 직접 접근은 차단) |
+| [Vercel](https://vercel.com) | 배포 |
+
+## 폴더 한눈에 보기
+
+```
+app/            화면(목록·상세·새 식당 등록)과 서버 API
+components/     식당 카드, 조건 버튼, 검색창, 평가·등록 양식
+lib/            규칙 검사(rules.ts), 금지어, 저장 공간 연결(서버 전용) 등
+data/           시연용 임시 식당 데이터
+supabase/       저장 공간 표를 만드는 명령(migrations)
+scripts/        임시 식당 데이터를 저장 공간에 넣는 명령
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 기획·설계 문서 (심사 자료)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| 문서 | 내용 |
+|---|---|
+| [PRD.md](PRD.md) | 서비스 기획서: 문제, 목표, 기능, "AI가 지킬 규칙" 19가지, 범위, 보안 |
+| [PLAN.md](PLAN.md) | 계획서: 만든 순서(작업 26개), 성공 기준, 위험 |
+| [DESIGN.md](DESIGN.md) | 설계서: 화면 구성, 데이터 흐름, API |
+| [CLAUDE.md](CLAUDE.md) | AI와 함께 개발할 때 지킨 프로젝트 규칙 |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 내 컴퓨터에서 실행하기
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+http://localhost:3000 에서 볼 수 있습니다. 저장 공간(Supabase)에 접속하려면 프로젝트 폴더에 `.env` 파일을 만들고 아래 두 값을 넣어야 합니다. **`.env`는 비밀 정보라 저장소에 올리지 않습니다.**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| 이름 | 설명 |
+|---|---|
+| `SUPABASE_URL` | Supabase 프로젝트 주소 |
+| `SUPABASE_SERVICE_ROLE_KEY` | 서버에서만 쓰는 비밀 열쇠 (절대 화면 쪽 코드에 넣지 않음) |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run db:seed        # 시연용 임시 식당 10곳을 저장 공간에 넣기
+npm run lint           # 코드 검사
+npm run build          # 배포용 빌드
+```
 
-## Deploy on Vercel
+## 개인정보·보안
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 실명·전화번호·이메일·사진·현재 위치(GPS)를 **받지 않습니다**. 평가할 때는 별명만 씁니다.
+- 로그인이 없어서 "같은 휴대폰"은 브라우저에 저장한 무작위 번호로 구분합니다. 이 번호는 서버가 어떤 응답에도 담지 않습니다.
+- 비밀 값은 서버 쪽 코드에서만 쓰고, 브라우저로 내려가는 파일에 들어가지 않는 것을 확인했습니다.
