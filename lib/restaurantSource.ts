@@ -96,6 +96,20 @@ export async function hasReviewedToday(restaurantId: string, deviceId: string): 
   return (count ?? 0) > 0;
 }
 
+/**
+ * 오늘(한국 시간) 이 기기로 새로 등록한 식당 수 — 하루 3곳 제한 (PLAN 작업 21)
+ * 기기 표시값은 비교에만 쓰고 어디에도 돌려주지 않습니다. 미리 넣은 식당은 기기 값이 "seed"라 세지 않습니다.
+ */
+export async function countRestaurantsRegisteredToday(deviceId: string): Promise<number> {
+  const { count, error } = await getDb()
+    .from("restaurants")
+    .select("id", { count: "exact", head: true })
+    .eq("device_id", deviceId)
+    .eq("created_date", todayInKorea());
+  if (error) throw new DataLoadError(`오늘 등록 수를 확인하지 못했습니다: ${error.message}`);
+  return count ?? 0;
+}
+
 /** 상세 화면용: 식당 정보 + 평가 목록(최신순) + 평균 별점. 없는 식당이면 null */
 export async function getRestaurantDetail(
   id: string,

@@ -6,11 +6,14 @@
 // 오류: { error: { code, message, field? } }
 //
 // 서버 쪽 2차 검사: 화면에서 이미 검사했더라도 lib/rules.ts의 같은 규칙으로 다시 검사합니다.
-// 같은 이름 안내·하루 3곳 제한은 PLAN 작업 21에서 이어서 다듬습니다.
-// (같은 이름은 저장 공간의 "같은 값 금지" 규칙이 이미 막고 있어, 이 API는 그 오류를 안내로 바꿔 줍니다)
+// PLAN 작업 21 (PRD 개발 단위 18):
+//   - 같은 이름(띄어쓰기·대소문자 무시)이 이미 있으면 등록을 막고 지점명 안내를 보냅니다 (409).
+//     실제로 막는 것은 저장 공간의 "같은 값 금지" 규칙이고, 이 API는 그 오류를 안내로 바꿔 줍니다.
+//   - 같은 휴대폰(기기 표시값)은 하루(한국 시간)에 새 식당을 3곳까지만 등록할 수 있습니다 (429).
 
 import { getDb } from "@/lib/db";
-import { makeNameKey, validateNewRestaurant } from "@/lib/rules";
+import { countRestaurantsRegisteredToday } from "@/lib/restaurantSource";
+import { LIMITS, makeNameKey, validateNewRestaurant } from "@/lib/rules";
 import type { ApiErrorResponse, CreateRestaurantResponse, ErrorCode } from "@/lib/types";
 
 function fail(status: number, code: ErrorCode, message: string, field?: string) {
@@ -48,9 +51,23 @@ export async function POST(request: Request) {
     return fail(400, "VALIDATION_ERROR", "잠시 후 다시 시도해 주세요");
   }
 
+  // 3) 하루 3곳 제한: 오늘 이 기기로 이미 3곳을 등록했으면 막음
+  try {
+    const registeredToday = await countRestaurantsRegisteredToday(deviceId);
+    if (registeredToday >= LIMITS.maxNewRestaurantsPerDay) {
+      return fail(
+        429,
+        "DAILY_LIMIT",
+        `새 식당은 하루 ${LIMITS.maxNewRestaurantsPerDay}곳까지 등록할 수 있어요. 내일 다시 등록해 주세요`,
+      );
+    }
+  } catch {
+    return fail(500, "SERVER_ERROR", "잠시 후 다시 시도해 주세요");
+  }
+
   const name = (input.name as string).trim();
 
-  // 3) 저장 (비교용 이름은 띄어쓰기를 빼고 소문자로 만든 값, 같으면 저장 공간이 막음)
+  // 4) 저장 (비교용 이름은 띄어쓰기를 빼고 소문자로 만든 값, 같으면 저장 공간이 막음)
   const { data, error } = await getDb()
     .from("restaurants")
     .insert({
