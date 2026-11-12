@@ -1,7 +1,8 @@
 // 금지어(욕설) 목록
 // PLAN 작업 4 / 기준: PRD.md 5번 must ②, DESIGN.md 4.0 "금지어 기준"
 //
-// 상태: AI 초안 — 작성자 승인 전 (승인되면 아래 상태 줄을 "작성자 승인 완료"로 바꿉니다)
+// 상태: 작성자 승인 완료 (2026-11-12, AI 초안 33개를 그대로 승인)
+// 단어를 더하거나 뺄 때도 작성자 승인을 받습니다.
 //
 // 검사 방법 (lib/rules.ts의 containsBannedWord):
 //   글에서 띄어쓰기를 모두 지우고 영어는 소문자로 바꾼 뒤,
@@ -13,7 +14,7 @@
 //   예) "시발" → "시발점", "보지" → "보지 마세요", "씹" → "씹는 맛", "새끼" → "새끼손가락"
 //   엉뚱한 글이 막히면 이 목록에서 해당 단어를 빼거나 고칩니다.
 
-export const BANNED_WORDS_STATUS = "AI 초안 — 작성자 승인 전";
+export const BANNED_WORDS_STATUS = "작성자 승인 완료 (2026-11-12)";
 
 export const BANNED_WORDS: readonly string[] = [
   // 대표 욕설
